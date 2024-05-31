@@ -1,5 +1,6 @@
 package jdbc;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,18 +46,15 @@ public class SimpleJDBCRepository {
     }
 
     public User findUserById(Long userId) {
-        User user = null;
+        User user = new User();
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(findUserByIdSQL)) {
             ps.setLong(1, userId);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                user = new User();
-                user.setId(userId);
-                user.setFirstName(rs.getString("firstname"));
-                user.setLastName(rs.getString("lastname"));
-                user.setAge(rs.getInt("age"));
-            }
+            user.setId(userId);
+            user.setFirstName(rs.getString("firstname"));
+            user.setLastName(rs.getString("lastname"));
+            user.setAge(rs.getInt("age"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -64,18 +62,16 @@ public class SimpleJDBCRepository {
     }
 
     public User findUserByName(String userName) {
-        User user = null;
+        User user=null;
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(findUserByNameSQL)) {
             ps.setString(1, userName);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String firstname = rs.getString("firstname");
-                String lastname = rs.getString("lastname");
-                int age = rs.getInt("age");
-                Long id = Long.parseLong(rs.getString("id"));
-                user = new User(id, firstname, lastname, age);
-            }
+            String firstname = rs.getString("firstname");
+            String lastname = rs.getString("lastname");
+            int age = rs.getInt("age");
+            Long id = Long.parseLong(rs.getString("id"));
+            user = new User(id, firstname, lastname, age);
         } catch (Exception e) {
             e.printStackTrace();
         }

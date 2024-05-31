@@ -30,9 +30,8 @@ public class SimpleJDBCRepository {
     private static final String findUserByNameSQL = "SELECT * FROM myusers where firstname=?";
     private static final String findAllUserSQL = "SELECT * FROM myusers;";
 
-    public Long createUser() {
+    public Long createUser(User user) {
         Long userId = null;
-        User user = new User();
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(createUserSQL, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getFirstName());

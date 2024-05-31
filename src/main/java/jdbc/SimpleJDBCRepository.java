@@ -99,8 +99,7 @@ public class SimpleJDBCRepository {
         return users;
     }
 
-    public User updateUser() {
-        User user = new User();
+    public User updateUser(User user) {
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(updateUserSQL)) {
             ps.setString(1, user.getFirstName());

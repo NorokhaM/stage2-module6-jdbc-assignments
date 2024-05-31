@@ -113,11 +113,11 @@ public class SimpleJDBCRepository {
         return user;
     }
 
-    private void deleteUser(Long userId) {
+    public void deleteUser(Long userId) {
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(deleteUser)) {
             ps.setLong(1, userId);
-            ps.executeUpdate();
+            ps.execute();
         } catch (Exception e) {
             e.printStackTrace();
         }

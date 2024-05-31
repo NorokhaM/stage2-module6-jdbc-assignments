@@ -6,10 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,14 +21,14 @@ public class SimpleJDBCRepository {
     private Statement st = null;
 
     private static final String createUserSQL = "INSTERT INTO myusers (firstname, lastname, age) VALUES(?,?,?)";
-    private static final String updateUserSQL = "UPDATE myusers SET firstname=?, lastname=?, age=? WHERE ID=?";
+    private static final String updateUserSQL = "UPDATE myusers SET firstname = ?, lastname = ?, age = ? WHERE id = ?";
     private static final String deleteUser = "DELETE FROM myusers WHERE id=?";
     private static final String findUserByIdSQL = "SELECT * FROM myusers WHERE ID=?";
     private static final String findUserByNameSQL = "SELECT * FROM myusers where firstname=?";
     private static final String findAllUserSQL = "SELECT * FROM myusers;";
 
     public Long createUser(User user) {
-        Long userId = null;
+        Long result = null;
         try (Connection connection = CustomDataSource.getInstance().getConnection();
              PreparedStatement ps = connection.prepareStatement(createUserSQL, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getFirstName());
@@ -39,13 +36,13 @@ public class SimpleJDBCRepository {
             ps.setInt(3, user.getAge());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
-            while (rs.next()) {
-                userId = rs.getLong(1);
+            if (rs.next()) {
+                result = rs.getLong(1);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception s) {
+            s.printStackTrace();
         }
-        return userId;
+        return result;
     }
 
     public User findUserById(Long userId) {
@@ -58,7 +55,6 @@ public class SimpleJDBCRepository {
             user.setFirstName(rs.getString("firstname"));
             user.setLastName(rs.getString("lastname"));
             user.setAge(rs.getInt("age"));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,15 +62,16 @@ public class SimpleJDBCRepository {
     }
 
     public User findUserByName(String userName) {
-        User user = new User();
+        User user=null;
         try (Connection connection = CustomDataSource.getInstance().getConnection();
-             PreparedStatement ps = connection.prepareStatement(findUserByIdSQL)) {
+             PreparedStatement ps = connection.prepareStatement(findUserByNameSQL)) {
             ps.setString(1, userName);
             ResultSet rs = ps.executeQuery();
-            user.setId(rs.getLong("id"));
-            user.setFirstName(rs.getString("firstname"));
-            user.setLastName(rs.getString("lastname"));
-            user.setAge(rs.getInt("age"));
+            String firstname = rs.getString("firstname");
+            String lastname = rs.getString("lastname");
+            int age = rs.getInt("age");
+            Long id = Long.parseLong(rs.getString("id"));
+            user = new User(id, firstname, lastname, age);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -84,7 +81,7 @@ public class SimpleJDBCRepository {
     public List<User> findAllUser() {
         List<User> users = new ArrayList<>();
         try (Connection connection = CustomDataSource.getInstance().getConnection();
-             PreparedStatement ps = connection.prepareStatement(findUserByIdSQL)) {
+             PreparedStatement ps = connection.prepareStatement(findAllUserSQL)) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 long id = rs.getLong("id");
@@ -106,9 +103,10 @@ public class SimpleJDBCRepository {
             ps.setString(2, user.getLastName());
             ps.setInt(3, user.getAge());
             ps.setLong(4, user.getId());
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (ps.executeUpdate() == 0)
+                throw new SQLException("No such user exists");
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
         }
         return user;
     }
